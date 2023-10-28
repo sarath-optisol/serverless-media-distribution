@@ -1,0 +1,7 @@
+BookartBucketIAM:
+  Effect: Allow
+  Action:
+    - s3:PutObject
+    - s3:PutBucketAcl
+    - s3:PutBucketPolicy   
+  Resource: arn:aws:s3:::${self:custom.BookartBucket.name}/*

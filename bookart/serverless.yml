@@ -1,0 +1,75 @@
+service: bookart
+
+plugins:
+  - serverless-bundle
+  - serverless-pseudo-parameters
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  memorySize: 256
+  stage: ${opt:stage, 'dev'}
+  region: us-east-1
+  httpApi:
+    cors:
+      allowedOrigins:
+        - https://localhost:3000/upload
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+      allowedMethods:
+        - POST
+        - GET
+      allowCredentials: true
+      exposedResponseHeaders:
+        - Special-Response-Header
+      maxAge: 6000
+  apiGateway:
+    binaryMediaTypes:
+      - 'multipart/form-data'
+  environment:
+    BOOKART_BUCKET_NAME: ${self:custom.BookartBucket.name}
+  iamRoleStatements:
+    - ${file(./iam/BookartBucketIAM.yml):BookartBucketIAM}  
+    
+resources:
+  Resources:
+    BookartBucket: ${file(./resources/BookartBucket.yml):BookartBucket}
+    BookartBucketPolicy: ${file(./resources/BookartBucket.yml):BookartBucketPolicy}
+
+functions:
+  uploadBookartPicture:
+    handler: src/handlers/uploadBookartPicture.handler
+    events:
+      - http:
+          method: POST
+          path: /media
+          authorizer: ${self:custom.authorizer}
+          integration: lambda
+          cors:
+            origin: 'http://localhost:3000/upload'
+  getAllFileName:
+    handler: src/handlers/getAllFileName.handler
+    events:
+      - http:
+          method: GET
+          path: /files
+          authorizer: ${self:custom.authorizer}
+          cors:
+            origin: 'http://localhost:3000/upload'
+  getFile:
+    handler: src/handlers/getFile.handler
+    events:
+      - http:
+          method: POST
+          path: /files
+          authorizer: ${self:custom.authorizer}
+          cors: true
+custom:
+  authorizer: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:serverless-auth0-authorizer-${self:provider.stage}-auth
+  bundle:
+    externals: all
+  BookartBucket:
+    name: bookart-bucket-sdfe23sf-${self:provider.stage}
+
+    

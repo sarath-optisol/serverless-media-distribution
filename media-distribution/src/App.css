@@ -1,0 +1,14 @@
+.upload-btn{
+text-align: center;
+margin-top: 150px;
+}
+.uploaded{
+  text-align: center;
+}
+
+.clickable-text:hover{
+  cursor: pointer;
+}
+.clickable-text{
+  text-decoration: underline;
+}
